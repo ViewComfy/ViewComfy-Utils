@@ -30,17 +30,17 @@ dev = [
 ]
 
 [project.urls]
-Repository = "https://github.com/GBieler/ViewComfy_Utils"
-BugTracker = "https://github.com/GBieler/ViewComfy_Utils/issues"
-Documentation = "https://github.com/GBieler/ViewComfy_Utils/wiki"
+Repository = "https://github.com/ViewComfy/ViewComfy_Utils"
+BugTracker = "https://github.com/ViewComfy/ViewComfy_Utils/issues"
+Documentation = "https://github.com/ViewComfy/ViewComfy_Utils/wiki"
 
 
 [tool.comfy]
-PublisherId = "GBieler"
+PublisherId = "ViewComfy"
 DisplayName = "ViewComfy Utils"
 Icon = ""
 Tags = []
-Repository = "https://github.com/GBieler/ViewComfy_Utils"
+Repository = "https://github.com/ViewComfy/ViewComfy_Utils"
 
 includes = []
 
