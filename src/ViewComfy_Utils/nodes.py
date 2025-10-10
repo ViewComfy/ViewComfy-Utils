@@ -25,9 +25,11 @@ class Compare:
         s.compare_functions = list(COMPARE_FUNCTIONS.keys())
         return {
             "required": {
-                "a": (AlwaysEqualProxy("*"), {"default": 0}),
-                "b": (AlwaysEqualProxy("*"), {"default": 0}),
                 "comparison": (s.compare_functions, {"default": "a == b"}),
+            },
+            "optional": {
+                "a": (AlwaysEqualProxy("*"), {"default": None}),
+                "b": (AlwaysEqualProxy("*"), {"default": None}),
             },
         }
 
@@ -36,18 +38,13 @@ class Compare:
     FUNCTION = "compare"
     CATEGORY = "utils"
 
-    def compare(self, a, b, comparison):
-        """
-        Compare two inputs and return the result of the comparison.
-
-        Args:
-            a (UNKNOWN): The first input.
-            b (UNKNOWN): The second input.
-            comparison (STRING): The comparison to perform. Can be one of "==", "!=", "<", ">", "<=", ">=".
-
-        Returns:
-            : The result of the comparison.
-        """
+    def compare(
+    self, 
+    comparison,
+    a=None, 
+    b=None
+    ):
+        print(f"comparison: {a}, {b}, {comparison}")
 
         if (hasattr(a, 'shape') and hasattr(b, 'shape') and 
             hasattr(a, '__iter__') and hasattr(b, '__iter__')):
@@ -181,7 +178,7 @@ class LoadImage:
         files = folder_paths.filter_files_content_types(files, ["image"])
         files = sorted(files) + ["None", ""]
         return {"required":
-                    {"image": (files, {"image_upload": True})},
+                    {"image": (files, {"default": "None", "image_upload": True})},
                 }
 
     CATEGORY = "image"
@@ -245,7 +242,6 @@ class LoadImage:
         with open(image_path, 'rb') as f:
             m.update(f.read())
         return m.digest().hex()
-
 
 class anythingInversedSwitch:
 
