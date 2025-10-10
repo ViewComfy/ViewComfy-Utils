@@ -4,6 +4,7 @@ import torch
 import hashlib
 from PIL import Image, ImageOps, ImageSequence
 import folder_paths
+import node_helpers
 import os
 from .utils import AlwaysEqualProxy, COMPARE_FUNCTIONS, ByPassTypeTuple
 
@@ -178,23 +179,22 @@ class LoadImage:
         input_dir = folder_paths.get_input_directory()
         files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f))]
         files = folder_paths.filter_files_content_types(files, ["image"])
-        files = sorted(files) + ["", "None"]
-        return {
-            "optional": {
-                "image": (files, {"image_upload": True})
-            }
-        }
+        files = sorted(files) + ["None", ""]
+        return {"required":
+                    {"image": (files, {"image_upload": True})},
+                }
 
     CATEGORY = "image"
-    RETURN_TYPES = (AlwaysEqualProxy("*"),)
+
+    RETURN_TYPES = ("IMAGE", "MASK")
     FUNCTION = "load_image"
     def load_image(self, image):
         if not image or not folder_paths.exists_annotated_filepath(image):
             return (None,)
-        
+
         image_path = folder_paths.get_annotated_filepath(image)
 
-        img = Image.open(image_path)
+        img = node_helpers.pillow(Image.open, image_path)
 
         output_images = []
         output_masks = []
@@ -203,7 +203,7 @@ class LoadImage:
         excluded_formats = ['MPO']
 
         for i in ImageSequence.Iterator(img):
-            i = ImageOps.exif_transpose(i)
+            i = node_helpers.pillow(ImageOps.exif_transpose, i)
 
             if i.mode == 'I':
                 i = i.point(lambda i: i * (1 / 255))
@@ -245,6 +245,7 @@ class LoadImage:
         with open(image_path, 'rb') as f:
             m.update(f.read())
         return m.digest().hex()
+
 
 class anythingInversedSwitch:
 
