@@ -1,6 +1,6 @@
 # ViewComfy Utils
 
-A lightweight ComfyUI custom node pack to enable ViewComfy app functionalities like workflow branching, optional image inputs, input validation and custom errors. 
+A lightweight ComfyUI custom node pack to enable [ViewComfy app](https://github.com/ViewComfy/ViewComfy) functionalities like workflow branching, optional image inputs, input validations and custom errors. 
 
 This node pack has no extra dependencies beyond the standard ComfyUI ones. It can be added to any ComfyUI environment with no risk of breaking anything.
 
