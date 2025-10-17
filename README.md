@@ -1,67 +1,227 @@
 # ViewComfy Utils
 
-Custom nodes to enable ViewComfy app functionalities
+Custom ComfyUI nodes to enable ViewComfy app functionalities like workflow branching, optional image inputs, input validation and custom errors. 
 
-> [!NOTE]
-> This projected was created with a [cookiecutter](https://github.com/Comfy-Org/cookiecutter-comfy-extension) template. It helps you start writing custom nodes without worrying about the Python setup.
+## Nodes
 
-## Quickstart
+1. [Compare](#compare)
 
-1. Install [ComfyUI](https://docs.comfy.org/get_started).
-1. Install [ComfyUI-Manager](https://github.com/ltdrdata/ComfyUI-Manager)
-1. Look up this extension in ComfyUI-Manager. If you are installing manually, clone this repository under `ComfyUI/custom_nodes`.
-1. Restart ComfyUI.
+2. [Conditional Select](#conditional-select)
 
-# Features
+3. [Show Anything](#show-anything)
 
-- A list of features
+4. [Load Image](#load-image)
 
-## Develop
+5. [Anything Inversed Switch](#anything-inversed-switch)
 
-To install the dev dependencies and pre-commit (will run the ruff hook), do:
+6. [Show Error Message](#show-error-message)
 
-```bash
-cd ViewComfy_Utils
-pip install -e .[dev]
-pre-commit install
-```
+  
 
-The `-e` flag above will result in a "live" install, in the sense that any changes you make to your node extension will automatically be picked up the next time you run ComfyUI.
+---
 
-## Publish to Github
+  
 
-Install Github Desktop or follow these [instructions](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) for ssh.
+## Compare
 
-1. Create a Github repository that matches the directory name. 
-2. Push the files to Git
-```
-git add .
-git commit -m "project scaffolding"
-git push
-``` 
+Compares two inputs and returns a Boolean. 
 
-## Writing custom nodes
+### Inputs
+Supports multiple data types, including primitives, tensors (images or videos), Booleans, etc. 
 
-An example custom node is located in [node.py](src/ViewComfy_Utils/nodes.py). To learn more, read the [docs](https://docs.comfy.org/essentials/custom_node_overview).
+The default value for a and b is `None`
+
+### Supported operators
+
+-  `a == b`
+
+-  `a != b`
+
+-  `a < b`
+
+-  `a > b` 
+
+-  `a <= b` 
+
+-  `a >= b`
+
+-  `a and b`
+
+-  `a or b` 
+
+  
+### Outputs
+
+-  Boolean
+
+### Special Behavior
+
+- Only `==` and `!=` operators are supported for Tensor Comparison (e.g. Images and Videos)
+
+-  The `and` and `or` operations require both inputs to be boolean values.
+
+  
+
+### Example Use Cases
+
+- Comparing numeric values to control workflow branching
+
+- Checking if tensors/images are identical
+
+- Create custom input validations in ComfyUI workflows 
+
+---
+
+  
+
+## Conditional Select
+
+Outputs one of two input values based on a boolean condition. This is essentially a programmatic if-else statement that works with any data type.
+
+  
+
+### Inputs
+
+- A boolean value that determines which input to output. Default: `True`
+
+- Values A and B. They can be of any type. Default: `None`
 
 
-## Tests
+### Outputs
 
-This repo contains unit tests written in Pytest in the `tests/` directory. It is recommended to unit test your custom node.
+-  Returns Value A if the condition is True, otherwise returns Value B.
 
-- [build-pipeline.yml](.github/workflows/build-pipeline.yml) will run pytest and linter on any open PRs
-- [validate.yml](.github/workflows/validate.yml) will run [node-diff](https://github.com/Comfy-Org/node-diff) to check for breaking changes
+### Example Use Cases
 
-## Publishing to Registry
+- Selecting between different models, images, or parameters based on conditions.
 
-If you wish to share this custom node with others in the community, you can publish it to the registry. We've already auto-populated some fields in `pyproject.toml` under `tool.comfy`, but please double-check that they are correct.
+- Implementing conditional logic in ComfyUI workflows. 
 
-You need to make an account on https://registry.comfy.org and create an API key token.
+  
 
-- [ ] Go to the [registry](https://registry.comfy.org). Login and create a publisher id (everything after the `@` sign on your registry profile). 
-- [ ] Add the publisher id into the pyproject.toml file.
-- [ ] Create an api key on the Registry for publishing from Github. [Instructions](https://docs.comfy.org/registry/publishing#create-an-api-key-for-publishing).
-- [ ] Add it to your Github Repository Secrets as `REGISTRY_ACCESS_TOKEN`.
+---
 
-A Github action will run on every git push. You can also run the Github action manually. Full instructions [here](https://docs.comfy.org/registry/publishing). Join our [discord](https://discord.com/invite/comfyorg) if you have any questions!
+  
+
+## Show Anything
+
+A visualization node that displays any type of data in the ComfyUI interface. It can handle strings, lists, objects, and complex data structures by converting them to readable text format.
+
+
+### Inputs
+
+-  Anything
+
+
+### Outputs
+
+-  The input as a JSON string
+  
+
+### Example Use Cases
+
+- Can be used to display text in ViewComfy apps
+- Debugging workflows by inspecting intermediate values
+- Monitoring data flow through complex workflows
+
+ 
+---
+
+  
+
+## Load Image
+
+A variation of the Load Image node with optional image loading capability. This allows ComfyUI workflows to run even when the node is not pointing to any image.  
+
+### Inputs
+
+- An Image. Default: `"None"`
+
+  
+
+### Outputs
+
+- An image and/or a mask
+- Returns `None` if no image is selected or if the file doesn't exist
+
+  
+
+### Special Behavior
+
+-  Unlike standard ComfyUI LoadImage, this node can work with `"None"` or `""` as input, returning None instead of raising an error.
+  
+
+### Example Use Cases
+
+- Build ViewComfy apps or ComfyUI based APIs with optional image inputs.
+
+  
+
+---
+
+  
+
+## Anything Inversed Switch
+
+Routes a single input to one of multiple outputs (up to 10) based on an index value. All non-selected outputs are blocked from execution, making this useful for conditional execution paths. 
+
+### Inputs
+
+- An index value to determine which output to route the input to. Default: `0`
+
+- The value to route to the selected output. This can be of any data type.
+  
+
+### Outputs
+
+- Only the output at the position matching `index` will receive the input value
+
+- All other outputs are blocked. 
+
+  
+
+### Special Behavior
+
+-  Nodes downstream of non-selected outputs will not execute
+  
+
+### Example Use Cases
+
+- Creating ViewComfy apps with conditional execution paths based on a user selected index
+
+- Routing data to different processing pipelines based on conditions
+
+- Building switch/case-like logic in ComfyUI
+
+  
+
+---
+
+  
+
+## Show Error Message
+
+Conditionally displays an error message and halts workflow execution. 
+
+  
+
+### Inputs
+
+- A boolean to control whether to raise an error or not. Default: `True`
+
+- The first and second parts of the error message. 
+
+
+### Outputs
+
+-  An error showing both parts of the messages combined. 
+  
+
+### Example Use Cases
+
+- Validating workflow inputs
+
+- Creating conditional error messages based on workflow state
+
+- Implementing user-friendly error handling in complex workflows
 
