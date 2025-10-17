@@ -44,7 +44,11 @@ class Compare:
     a=None, 
     b=None
     ):
-        print(f"comparison: {a}, {b}, {comparison}")
+        if comparison == "a and b" or comparison == "a or b":
+            if not(isinstance(a, bool) and isinstance(b, bool)):
+                raise Exception("both a and b must be booleans for 'and' or 'or' comparison")
+            else:
+                return (COMPARE_FUNCTIONS[comparison](a, b),)
 
         if (hasattr(a, 'shape') and hasattr(b, 'shape') and 
             hasattr(a, '__iter__') and hasattr(b, '__iter__')):
@@ -272,6 +276,35 @@ class anythingInversedSwitch:
                 res.append(ExecutionBlocker(None))
         return res
 
+class showErrorMessage:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required": {
+            "Show_Error": ("BOOLEAN", {"default": True}),
+            "Error_Message_Part_1": ("STRING", {"default": "Workflow Execution Failed", "multiline": True}),
+        },
+        "optional": {
+            "Error_Message_Part_2": ("STRING", {"default": "", "multiline": True}),
+        }
+        }
+
+    RETURN_TYPES = ()
+    OUTPUT_NODE = True
+    FUNCTION = "show_error_message"
+    CATEGORY = "utils"
+
+    def show_error_message(self, 
+    Error_Message_Part_1,
+    Error_Message_Part_2,
+    Show_Error,
+    ):
+        error_message = F'{Error_Message_Part_1} {str(Error_Message_Part_2)}'
+        if Show_Error:
+            raise Exception(error_message)
+        else:
+            return "Show_Error is False"
+
+
 # Node class mappings
 NODE_CLASS_MAPPINGS = {
     "ConditionalSelect_ViewComfy": ConditionalSelect,
@@ -279,6 +312,7 @@ NODE_CLASS_MAPPINGS = {
     "showAnything_ViewComfy": showAnything,
     "LoadImage_ViewComfy": LoadImage,
     "anythingInversedSwitch_ViewComfy": anythingInversedSwitch,
+    "showErrorMessage_ViewComfy": showErrorMessage,
 }
 
 # Node display name mappings
@@ -288,4 +322,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "showAnything_ViewComfy": "ViewComfy - Show Anything",
     "LoadImage_ViewComfy": "ViewComfy - Load Image",
     "anythingInversedSwitch_ViewComfy": "ViewComfy - Anything Inversed Switch",
+    "showErrorMessage_ViewComfy": "ViewComfy - Show Error Message",
 }

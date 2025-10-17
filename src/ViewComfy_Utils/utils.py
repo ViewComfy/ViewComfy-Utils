@@ -12,6 +12,8 @@ COMPARE_FUNCTIONS = {
     "a > b": lambda a, b: a > b,
     "a <= b": lambda a, b: a <= b,
     "a >= b": lambda a, b: a >= b,
+    "a and b": lambda a, b: a and b,
+    "a or b": lambda a, b: a or b,
 }
 
 class TautologyStr(str):
