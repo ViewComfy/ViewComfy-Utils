@@ -1,31 +1,33 @@
-import numpy as np
-import json
-import torch
 import hashlib
-from PIL import Image, ImageOps, ImageSequence
+import json
+import os
+from pathlib import Path
+from typing import Any
+from nodes import LoadImage
+
 import folder_paths
 import node_helpers
-import os
-from .utils import AlwaysEqualProxy, COMPARE_FUNCTIONS, ByPassTypeTuple
+import numpy as np
+import torch
+from PIL import Image, ImageOps, ImageSequence
+
+from .utils import COMPARE_FUNCTIONS, AlwaysEqualProxy, ByPassTypeTuple
 
 MAX_FLOW_NUM = 20
 
 any_type = AlwaysEqualProxy("*")
 
+
 class Compare:
-    """
-    This nodes compares the two inputs and outputs the result of the comparison.
-    """
+    """Compares the two inputs and outputs the result of the comparison."""
 
     @classmethod
-    def INPUT_TYPES(s):
-        """
-        Comparison node takes two inputs, a and b, and compares them.
-        """
-        s.compare_functions = list(COMPARE_FUNCTIONS.keys())
+    def INPUT_TYPES(cls) -> dict[str, Any]:  # noqa: N802
+        """Comparison node takes two inputs, a and b, and compares them."""
+        cls.compare_functions = list[str](COMPARE_FUNCTIONS.keys())
         return {
             "required": {
-                "comparison": (s.compare_functions, {"default": "a == b"}),
+                "comparison": (cls.compare_functions, {"default": "a == b"}),
             },
             "optional": {
                 "a": (AlwaysEqualProxy("*"), {"default": None}),
@@ -39,69 +41,70 @@ class Compare:
     CATEGORY = "utils"
 
     def compare(
-    self, 
-    comparison,
-    a=None, 
-    b=None
-    ):
-        if comparison == "a and b" or comparison == "a or b":
-            if not(isinstance(a, bool) and isinstance(b, bool)):
-                raise Exception("both a and b must be booleans for 'and' or 'or' comparison")
-            else:
-                return (COMPARE_FUNCTIONS[comparison](a, b),)
+        self,
+        comparison: str,
+        a: Any | None = None,
+        b: Any | None = None,
+    ) -> tuple:
+        if comparison in ("a and b", "a or b"):
+            if not (isinstance(a, bool) and isinstance(b, bool)):
+                msg = "both a and b must be booleans for 'and' or 'or' comparison"
+                raise Exception(msg)  # noqa: TRY002
+            return (COMPARE_FUNCTIONS[comparison](a, b),)
 
-        if (hasattr(a, 'shape') and hasattr(b, 'shape') and 
-            hasattr(a, '__iter__') and hasattr(b, '__iter__')):
+        if hasattr(a, "shape") and hasattr(b, "shape") and hasattr(a, "__iter__") and hasattr(b, "__iter__"):
             if comparison not in ["a == b", "a != b"]:
-                raise ValueError(f"Comparison {comparison} is not supported for tensor comparison")
+                msg = f"Comparison {comparison} is not supported for tensor comparison"
+                raise ValueError(msg)
             try:
                 # Get shapes for comparison
-                shape_a = a.shape if hasattr(a, 'shape') else None
-                shape_b = b.shape if hasattr(b, 'shape') else None
-                
+                shape_a = a.shape if a and hasattr(a, "shape") else None
+                shape_b = b.shape if b and hasattr(b, "shape") else None
+
                 if shape_a is not None and shape_b is not None and shape_a != shape_b:
                     if comparison == "a == b":
                         return (False,)
-                    elif comparison == "a != b":
+                    if comparison == "a != b":
                         return (True,)
                     return (False,)
-            except Exception as e:
+            except Exception:  # noqa: BLE001, S110
                 # If shape comparison fails, continue with normal comparison
                 pass
-    
+
         result = COMPARE_FUNCTIONS[comparison](a, b)
-        
+
         # Handle tensor comparisons - if result is an array/tensor, check if all values are True
-        if hasattr(result, '__iter__') and not isinstance(result, (str, bytes)):
+        if hasattr(result, "__iter__") and not isinstance(result, (str, bytes)):
             try:
                 # Convert to numpy array if it's a tensor
-                if hasattr(result, 'cpu'):  # PyTorch tensor
+                if hasattr(result, "cpu"):  # PyTorch tensor
                     result = result.cpu().numpy()
-                elif hasattr(result, 'numpy'):  # TensorFlow tensor
+                elif hasattr(result, "numpy"):  # TensorFlow tensor
                     result = result.numpy()
-                
+
                 # Check if all values are True
                 result = bool(np.all(result))
-            except:
+            except Exception:  # noqa: BLE001
                 # If conversion fails, try to check if all elements are truthy
-                try:
+                try:  # noqa: SIM105
                     result = all(result)
-                except:
+                except Exception:  # noqa: BLE001, S110
                     # If all else fails, just use the original result
                     pass
         return (result,)
 
+
 class ConditionalSelect:
     @classmethod
-    def INPUT_TYPES(cls):
+    def INPUT_TYPES(cls) -> dict[str, Any]:  # noqa: N802
         return {
             "required": {
                 "condition": ("BOOLEAN", {"default": True}),
             },
             "optional": {
-                "value_a": (AlwaysEqualProxy("*"),{"default": None}),
-                "value_b": (AlwaysEqualProxy("*"),{"default": None}),
-            }
+                "value_a": (AlwaysEqualProxy("*"), {"default": None}),
+                "value_b": (AlwaysEqualProxy("*"), {"default": None}),
+            },
         }
 
     RETURN_TYPES = (AlwaysEqualProxy("*"),)
@@ -110,88 +113,99 @@ class ConditionalSelect:
     CATEGORY = "utils"
 
     def conditional_select(
-        self, 
-        condition, 
-        value_a=None, 
-        value_b=None
-        ):
-        """
-        Returns value_a if condition is True, value_b if condition is False.
+        self,
+        condition: Any,
+        value_a: Any,
+        value_b: Any,
+    ) -> tuple:
+        """Return value_a if condition is True, value_b if condition is False.
+
         Can handle any type of input values.
         """
         if condition:
             return (value_a,)
-        else:
-            return (value_b,)
+        return (value_b,)
 
-class showAnything:
+
+class ShowAnything:
     @classmethod
-    def INPUT_TYPES(s):
-        return {"required": {}, "optional": {"anything": (any_type, {}), },
-                "hidden": {"unique_id": "UNIQUE_ID", "extra_pnginfo": "EXTRA_PNGINFO",
-                           }}
+    def INPUT_TYPES(cls) -> dict:  # noqa: N802
+        return {
+            "required": {},
+            "optional": {"anything": (any_type, {})},
+            "hidden": {
+                "unique_id": "UNIQUE_ID",
+                "extra_pnginfo": "EXTRA_PNGINFO",
+            },
+        }
 
     RETURN_TYPES = (any_type,)
-    RETURN_NAMES = ('output',)
+    RETURN_NAMES = ("output",)
     INPUT_IS_LIST = True
     OUTPUT_NODE = True
     FUNCTION = "log_input"
     CATEGORY = "utils"
 
-    def log_input(self, 
-    unique_id=None, 
-    extra_pnginfo=None, 
-    **kwargs
+    def log_input(
+        self,
+        unique_id: list | tuple | None = None,
+        extra_pnginfo: dict | None = None,
+        **kwargs: dict,
     ):
-
         values = []
         if "anything" in kwargs:
-            for val in kwargs['anything']:
+            for val in kwargs["anything"]:
                 try:
                     if type(val) is str:
                         values.append(val)
                     elif type(val) is list:
                         values = val
                     else:
-                        val = json.dumps(val)
-                        values.append(str(val))
-                except Exception:
+                        json_val = json.dumps(val)
+                        values.append(str(json_val))
+                except Exception:  # noqa: BLE001, PERF203
                     values.append(str(val))
-                    pass
 
         if not extra_pnginfo:
             print("Error: extra_pnginfo is empty")
-        elif (not isinstance(extra_pnginfo[0], dict) or "workflow" not in extra_pnginfo[0]):
+        elif not isinstance(extra_pnginfo[0], dict) or "workflow" not in extra_pnginfo[0]:
             print("Error: extra_pnginfo[0] is not a dict or missing 'workflow' key")
-        else:
+        elif unique_id:
             workflow = extra_pnginfo[0]["workflow"]
             node = next((x for x in workflow["nodes"] if str(x["id"]) == unique_id[0]), None)
             if node:
                 node["widgets_values"] = [values]
+        else:
+            print("unique_id is None")
 
         if isinstance(values, list) and len(values) == 1:
-            return {"ui": {"text": values}, "result": (values[0],), }
-        else:
-            return {"ui": {"text": values}, "result": (values,), }
+            return {"ui": {"text": values}, "result": (values[0],)}
+        return {"ui": {"text": values}, "result": (values,)}
 
-class LoadImage:
+
+class LoadImageVC:
     @classmethod
-    def INPUT_TYPES(s):
+    def INPUT_TYPES(cls) -> dict:  # noqa: N802
         input_dir = folder_paths.get_input_directory()
         files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f))]
         files = folder_paths.filter_files_content_types(files, ["image"])
-        files = sorted(files) + ["None", ""]
-        return {"required":
-                    {"image": (files, {"default": "None", "image_upload": True})},
-                }
+        files = [*sorted(files)]
+        return {
+            "required": {
+                "image": (files, {"image_upload": True}),
+                "required": ("BOOLEAN", {"default": True}),
+            },
+        }
 
     CATEGORY = "image"
 
     RETURN_TYPES = ("IMAGE", "MASK")
     FUNCTION = "load_image"
-    def load_image(self, image):
+
+    def load_image(self, image, required) -> tuple:
+        print(f"image load image funciton: {image}")
         if not image or not folder_paths.exists_annotated_filepath(image):
-            return (None,)
+            return ("",)
 
         image_path = folder_paths.get_annotated_filepath(image)
 
@@ -201,14 +215,14 @@ class LoadImage:
         output_masks = []
         w, h = None, None
 
-        excluded_formats = ['MPO']
+        excluded_formats = ["MPO"]
 
         for i in ImageSequence.Iterator(img):
-            i = node_helpers.pillow(ImageOps.exif_transpose, i)
+            image_pillow = node_helpers.pillow(ImageOps.exif_transpose, i)
 
-            if i.mode == 'I':
-                i = i.point(lambda i: i * (1 / 255))
-            image = i.convert("RGB")
+            if i.mode == "I":
+                image_pillow = i.point(lambda i: i * (1 / 255))
+            image = image_pillow.convert("RGB")
 
             if len(output_images) == 0:
                 w = image.size[0]
@@ -219,14 +233,14 @@ class LoadImage:
 
             image = np.array(image).astype(np.float32) / 255.0
             image = torch.from_numpy(image)[None,]
-            if 'A' in i.getbands():
-                mask = np.array(i.getchannel('A')).astype(np.float32) / 255.0
-                mask = 1. - torch.from_numpy(mask)
-            elif i.mode == 'P' and 'transparency' in i.info:
-                mask = np.array(i.convert('RGBA').getchannel('A')).astype(np.float32) / 255.0
-                mask = 1. - torch.from_numpy(mask)
+            if "A" in i.getbands():
+                mask = np.array(i.getchannel("A")).astype(np.float32) / 255.0
+                mask = 1.0 - torch.from_numpy(mask)
+            elif i.mode == "P" and "transparency" in i.info:
+                mask = np.array(i.convert("RGBA").getchannel("A")).astype(np.float32) / 255.0
+                mask = 1.0 - torch.from_numpy(mask)
             else:
-                mask = torch.zeros((64,64), dtype=torch.float32, device="cpu")
+                mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
             output_images.append(image)
             output_masks.append(mask.unsqueeze(0))
 
@@ -240,52 +254,86 @@ class LoadImage:
         return (output_image, output_mask)
 
     @classmethod
-    def IS_CHANGED(s, image):
+    def IS_CHANGED(cls, image, required) -> str:
         image_path = folder_paths.get_annotated_filepath(image)
         m = hashlib.sha256()
-        with open(image_path, 'rb') as f:
+        with Path.open(image_path, "rb") as f:
             m.update(f.read())
         return m.digest().hex()
 
-class anythingInversedSwitch:
+    @classmethod
+    def VALIDATE_INPUTS(cls, image, required):
+        print(f"image: {image}")
+        if required and not image:
+            return False
+        return True
 
+
+class LoadImageWithSwitch(LoadImage):
     @classmethod
     def INPUT_TYPES(s):
-        return {"required": {
-            "index": ("INT", {"default": 0, "min": 0, "max": 9, "step": 1}),
-            "in": (any_type,),
-        },
+        input_dir = folder_paths.get_input_directory()
+        files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f))]
+        return {
+            "required": {"image": (sorted(files), {"image_upload": True})},
+            "optional": {
+                "enabled": ("BOOLEAN", {"default": True, "label_on": "enabled", "label_off": "disabled"}),
+            },
+        }
+
+    CATEGORY = "image"
+    RETURN_TYPES = ("IMAGE", "MASK", "BOOLEAN")
+    RETURN_NAMES = ("image", "mask", "enabled")
+    FUNCTION = "load_image_with_switch"
+
+    def load_image_with_switch(self, image, enabled=True):
+        if not enabled:
+            return None, None, enabled
+        return self.load_image(image) + (enabled,)
+
+
+class AnythingInversedSwitch:
+    @classmethod
+    def INPUT_TYPES(cls) -> dict:
+        return {
+            "required": {
+                "index": ("INT", {"default": 0, "min": 0, "max": 9, "step": 1}),
+                "in": (any_type,),
+            },
             "hidden": {"unique_id": "UNIQUE_ID"},
         }
 
-    RETURN_TYPES = ByPassTypeTuple(tuple([any_type]))
-    RETURN_NAMES = ByPassTypeTuple(tuple(["out0"]))
+    RETURN_TYPES = ByPassTypeTuple(tuple[AlwaysEqualProxy, ...]([any_type]))
+    RETURN_NAMES = ByPassTypeTuple(tuple[str, ...](["out0"]))
     FUNCTION = "switch"
 
     CATEGORY = "utils"
 
-    def switch(self, index, unique_id, **kwargs):
-        print('starting anythingInversedSwitch')
+    def switch(self, index: int, _: Any, **kwargs: dict):
+        print("starting anythingInversedSwitch")
         from comfy_execution.graph import ExecutionBlocker
+
         res = []
 
-        for i in range(0, MAX_FLOW_NUM):
+        for i in range(MAX_FLOW_NUM):
             if index == i:
-                res.append(kwargs['in'])
+                res.append(kwargs["in"])
             else:
                 res.append(ExecutionBlocker(None))
         return res
 
-class showErrorMessage:
+
+class ShowErrorMessage:
     @classmethod
-    def INPUT_TYPES(s):
-        return {"required": {
-            "Show_Error": ("BOOLEAN", {"default": True}),
-            "Error_Message_Part_1": ("STRING", {"default": "Workflow Execution Failed", "multiline": True}),
-        },
-        "optional": {
-            "Error_Message_Part_2": ("STRING", {"default": "", "multiline": True}),
-        }
+    def INPUT_TYPES(cls) -> dict:  # noqa: N802
+        return {
+            "required": {
+                "Show_Error": ("BOOLEAN", {"default": True}),
+                "Error_Message_Part_1": ("STRING", {"default": "Workflow Execution Failed", "multiline": True}),
+            },
+            "optional": {
+                "Error_Message_Part_2": ("STRING", {"default": "", "multiline": True}),
+            },
         }
 
     RETURN_TYPES = ()
@@ -293,34 +341,36 @@ class showErrorMessage:
     FUNCTION = "show_error_message"
     CATEGORY = "utils"
 
-    def show_error_message(self, 
-    Error_Message_Part_1,
-    Error_Message_Part_2,
-    Show_Error,
-    ):
-        error_message = F'{Error_Message_Part_1} {str(Error_Message_Part_2)}'
-        if Show_Error:
-            raise Exception(error_message)
-        else:
-            return "Show_Error is False"
+    def show_error_message(
+        self,
+        error_message_part_1: str,
+        error_message_part_2: str,
+        show_error: bool,
+    ) -> str:
+        error_message = f"{error_message_part_1} {error_message_part_2!s}"
+        if show_error:
+            raise Exception(error_message)  # noqa: TRY002
+        return "show_error is False"
 
 
 # Node class mappings
 NODE_CLASS_MAPPINGS = {
     "ConditionalSelect_ViewComfy": ConditionalSelect,
     "Compare_ViewComfy": Compare,
-    "showAnything_ViewComfy": showAnything,
-    "LoadImage_ViewComfy": LoadImage,
-    "anythingInversedSwitch_ViewComfy": anythingInversedSwitch,
-    "showErrorMessage_ViewComfy": showErrorMessage,
+    "ShowAnything_ViewComfy": ShowAnything,
+    "LoadImage_ViewComfy": LoadImageVC,
+    "AnythingInversedSwitch_ViewComfy": AnythingInversedSwitch,
+    "ShowErrorMessage_ViewComfy": ShowErrorMessage,
+    "LoadImageSwitch_ViewComfy": LoadImageWithSwitch,
 }
 
 # Node display name mappings
 NODE_DISPLAY_NAME_MAPPINGS = {
     "ConditionalSelect_ViewComfy": "ViewComfy - Conditional Select",
     "Compare_ViewComfy": "ViewComfy - Compare",
-    "showAnything_ViewComfy": "ViewComfy - Show Anything",
+    "ShowAnything_ViewComfy": "ViewComfy - Show Anything",
     "LoadImage_ViewComfy": "ViewComfy - Load Image",
-    "anythingInversedSwitch_ViewComfy": "ViewComfy - Anything Inversed Switch",
-    "showErrorMessage_ViewComfy": "ViewComfy - Show Error Message",
+    "AnythingInversedSwitch_ViewComfy": "ViewComfy - Anything Inversed Switch",
+    "ShowErrorMessage_ViewComfy": "ViewComfy - Show Error Message",
+    "LoadImageSwitch_ViewComfy": "LoadImageSwitch_ViewComfy",
 }

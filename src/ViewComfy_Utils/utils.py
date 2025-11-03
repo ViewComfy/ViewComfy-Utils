@@ -1,9 +1,15 @@
+from typing import Any
+
+
 class AlwaysEqualProxy(str):
-    def __eq__(self, _):
+    __slots__ = ()
+
+    def __eq__(self, obj: object) -> bool:
         return True
 
-    def __ne__(self, _):
+    def __ne__(self, obj: object) -> bool:
         return False
+
 
 COMPARE_FUNCTIONS = {
     "a == b": lambda a, b: a == b,
@@ -16,14 +22,19 @@ COMPARE_FUNCTIONS = {
     "a or b": lambda a, b: a or b,
 }
 
+
 class TautologyStr(str):
-    def __ne__(self, other):
+    __slots__ = ()
+
+    def __ne__(self, other) -> bool:
         return False
 
+
 class ByPassTypeTuple(tuple):
-    def __getitem__(self, index):
-        if index>0:
-            index=0
+    __slots__ = ()
+
+    def __getitem__(self, index: int) -> TautologyStr | Any:
+        index = min(index, 0)
         item = super().__getitem__(index)
         if isinstance(item, str):
             return TautologyStr(item)
