@@ -2,13 +2,14 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from types import NoneType
 from typing import Any
-from nodes import LoadImage
 
 import folder_paths
 import node_helpers
 import numpy as np
 import torch
+from nodes import LoadImage
 from PIL import Image, ImageOps, ImageSequence
 
 from .utils import COMPARE_FUNCTIONS, AlwaysEqualProxy, ByPassTypeTuple
@@ -189,11 +190,10 @@ class LoadImageVC:
         input_dir = folder_paths.get_input_directory()
         files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f))]
         files = folder_paths.filter_files_content_types(files, ["image"])
-        files = [*sorted(files)]
+        files = [*sorted(files), "None"]
         return {
             "required": {
-                "image": (files, {"image_upload": True}),
-                "required": ("BOOLEAN", {"default": True}),
+                "image": (files, {"image_upload": True, "default": "None"}),
             },
         }
 
@@ -202,7 +202,7 @@ class LoadImageVC:
     RETURN_TYPES = ("IMAGE", "MASK")
     FUNCTION = "load_image"
 
-    def load_image(self, image, required) -> tuple:
+    def load_image(self, image) -> tuple:
         print(f"image load image funciton: {image}")
         if not image or not folder_paths.exists_annotated_filepath(image):
             return ("",)
@@ -254,7 +254,7 @@ class LoadImageVC:
         return (output_image, output_mask)
 
     @classmethod
-    def IS_CHANGED(cls, image, required) -> str:
+    def IS_CHANGED(cls, image) -> str:
         image_path = folder_paths.get_annotated_filepath(image)
         m = hashlib.sha256()
         with Path.open(image_path, "rb") as f:
@@ -262,11 +262,8 @@ class LoadImageVC:
         return m.digest().hex()
 
     @classmethod
-    def VALIDATE_INPUTS(cls, image, required):
-        print(f"image: {image}")
-        if required and not image:
-            return False
-        return True
+    def VALIDATE_INPUTS(cls, image):
+        return isinstance(image, (NoneType, str))
 
 
 class LoadImageWithSwitch(LoadImage):
@@ -328,11 +325,11 @@ class ShowErrorMessage:
     def INPUT_TYPES(cls) -> dict:  # noqa: N802
         return {
             "required": {
-                "Show_Error": ("BOOLEAN", {"default": True}),
-                "Error_Message_Part_1": ("STRING", {"default": "Workflow Execution Failed", "multiline": True}),
+                "show_error": ("BOOLEAN", {"default": True}),
+                "error_message_part_1": ("STRING", {"default": "Workflow Execution Failed", "multiline": True}),
             },
             "optional": {
-                "Error_Message_Part_2": ("STRING", {"default": "", "multiline": True}),
+                "error_message_part_2": ("STRING", {"default": "", "multiline": True}),
             },
         }
 
