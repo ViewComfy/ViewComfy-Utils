@@ -1,0 +1,126 @@
+{
+  "72": {
+    "inputs": {
+      "image": "4e32560a-6f94-4439-b91d-83811dc00526.jpg"
+    },
+    "class_type": "LoadImage_ViewComfy",
+    "_meta": {
+      "title": "ViewComfy - Load Image 1"
+    }
+  },
+  "77": {
+    "inputs": {
+      "show_error": [
+        "85",
+        0
+      ],
+      "error_message_part_1": "Image is too large",
+      "error_message_part_2": ""
+    },
+    "class_type": "ShowErrorMessage_ViewComfy",
+    "_meta": {
+      "title": "ViewComfy - Show Error Message"
+    }
+  },
+  "78": {
+    "inputs": {
+      "image": [
+        "72",
+        0
+      ]
+    },
+    "class_type": "GetImageSize",
+    "_meta": {
+      "title": "Get Image Size"
+    }
+  },
+  "81": {
+    "inputs": {
+      "comparison": "a > b",
+      "a": [
+        "78",
+        0
+      ],
+      "b": [
+        "83",
+        0
+      ]
+    },
+    "class_type": "Compare_ViewComfy",
+    "_meta": {
+      "title": "ViewComfy - Compare"
+    }
+  },
+  "82": {
+    "inputs": {
+      "comparison": "a > b",
+      "a": [
+        "78",
+        1
+      ],
+      "b": [
+        "83",
+        0
+      ]
+    },
+    "class_type": "easy compare",
+    "_meta": {
+      "title": "Compare"
+    }
+  },
+  "83": {
+    "inputs": {
+      "value": 1024
+    },
+    "class_type": "PrimitiveInt",
+    "_meta": {
+      "title": "Max image size"
+    }
+  },
+  "85": {
+    "inputs": {
+      "comparison": "a or b",
+      "a": [
+        "81",
+        0
+      ],
+      "b": [
+        "82",
+        0
+      ]
+    },
+    "class_type": "Compare_ViewComfy",
+    "_meta": {
+      "title": "ViewComfy - Compare"
+    }
+  },
+  "86": {
+    "inputs": {
+      "condition": [
+        "85",
+        0
+      ],
+      "value_b": [
+        "72",
+        0
+      ]
+    },
+    "class_type": "ConditionalSelect_ViewComfy",
+    "_meta": {
+      "title": "ViewComfy - Conditional Select"
+    }
+  },
+  "87": {
+    "inputs": {
+      "filename_prefix": "ComfyUI",
+      "images": [
+        "86",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  }
+}

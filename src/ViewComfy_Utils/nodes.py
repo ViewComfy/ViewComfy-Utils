@@ -116,8 +116,8 @@ class ConditionalSelect:
     def conditional_select(
         self,
         condition: Any,
-        value_a: Any,
-        value_b: Any,
+        value_a=None, 
+        value_b=None,
     ) -> tuple:
         """Return value_a if condition is True, value_b if condition is False.
 
