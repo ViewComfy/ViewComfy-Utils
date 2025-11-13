@@ -203,7 +203,6 @@ class LoadImageVC:
     FUNCTION = "load_image"
 
     def load_image(self, image) -> tuple:
-        print(f"image load image funciton: {image}")
         if not image or not folder_paths.exists_annotated_filepath(image):
             print(f"image is None or not exists: {image}")
             return (None,)
@@ -265,29 +264,6 @@ class LoadImageVC:
     @classmethod
     def VALIDATE_INPUTS(cls, image):
         return isinstance(image, (NoneType, str))
-
-
-class LoadImageWithSwitch(LoadImage):
-    @classmethod
-    def INPUT_TYPES(s):
-        input_dir = folder_paths.get_input_directory()
-        files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f))]
-        return {
-            "required": {"image": (sorted(files), {"image_upload": True})},
-            "optional": {
-                "enabled": ("BOOLEAN", {"default": True, "label_on": "enabled", "label_off": "disabled"}),
-            },
-        }
-
-    CATEGORY = "image"
-    RETURN_TYPES = ("IMAGE", "MASK", "BOOLEAN")
-    RETURN_NAMES = ("image", "mask", "enabled")
-    FUNCTION = "load_image_with_switch"
-
-    def load_image_with_switch(self, image, enabled=True):
-        if not enabled:
-            return None, None, enabled
-        return self.load_image(image) + (enabled,)
 
 
 class AnythingInversedSwitch:
@@ -359,7 +335,6 @@ NODE_CLASS_MAPPINGS = {
     "LoadImage_ViewComfy": LoadImageVC,
     "AnythingInversedSwitch_ViewComfy": AnythingInversedSwitch,
     "ShowErrorMessage_ViewComfy": ShowErrorMessage,
-    "LoadImageSwitch_ViewComfy": LoadImageWithSwitch,
 }
 
 # Node display name mappings
@@ -370,5 +345,4 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "LoadImage_ViewComfy": "ViewComfy - Load Image",
     "AnythingInversedSwitch_ViewComfy": "ViewComfy - Anything Inversed Switch",
     "ShowErrorMessage_ViewComfy": "ViewComfy - Show Error Message",
-    "LoadImageSwitch_ViewComfy": "LoadImageSwitch_ViewComfy",
 }
