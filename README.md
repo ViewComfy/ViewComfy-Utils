@@ -150,7 +150,7 @@ A variation of the Load Image node with optional image loading capability. This 
 
 ### Special Behavior
 
--  Unlike standard ComfyUI LoadImage, this node can work with `"None"` or `""` as input, returning None instead of raising an error.
+-  Unlike standard ComfyUI LoadImage, this node can work with `"None"` as input, returning `None` instead of raising an error.
   
 
 ### Example Use Cases
