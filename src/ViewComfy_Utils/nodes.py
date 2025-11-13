@@ -205,7 +205,8 @@ class LoadImageVC:
     def load_image(self, image) -> tuple:
         print(f"image load image funciton: {image}")
         if not image or not folder_paths.exists_annotated_filepath(image):
-            return ("",)
+            print(f"image is None or not exists: {image}")
+            return (None,)
 
         image_path = folder_paths.get_annotated_filepath(image)
 
