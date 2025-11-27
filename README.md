@@ -18,7 +18,10 @@ This node pack has no extra dependencies beyond the standard ComfyUI ones. It ca
 
 6. [Show Error Message](#show-error-message)
 
-  
+## Demo
+
+[![Demo Video](https://github.com/user-attachments/assets/ac06c9e3-c2f0-4941-97f5-8f91ea6c781d)](https://youtu.be/kMSHMvVe-W8)
+
 
 ---
 
