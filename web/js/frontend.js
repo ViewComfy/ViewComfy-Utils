@@ -58,6 +58,60 @@ app.registerExtension({
             };
         }
 
+        // Handle saveText_ViewComfy node
+        if (node_name === 'saveText_ViewComfy') {
+            function populate(text, name = 'saved_text') {
+                if (this.widgets) {
+                    const pos = this.widgets.findIndex((w) => w.name === name);
+                    if (pos !== -1) {
+                        for (let i = pos; i < this.widgets.length; i++) {
+                            this.widgets[i].onRemove?.();
+                        }
+                        this.widgets.length = pos;
+                    }
+                }
+                
+                // Handle both string and array of strings
+                const textArray = Array.isArray(text) ? text : [text];
+                
+                for (const textItem of textArray) {
+                    const w = ComfyWidgets["STRING"](this, name, ["STRING", {multiline: true}], app).widget;
+                    w.inputEl.readOnly = true;
+                    w.inputEl.style.opacity = 0.6;
+                    w.value = textItem;
+                }
+                
+                requestAnimationFrame(() => {
+                    const sz = this.computeSize();
+                    if (sz[0] < this.size[0]) {
+                        sz[0] = this.size[0];
+                    }
+                    if (sz[1] < this.size[1]) {
+                        sz[1] = this.size[1];
+                    }
+                    this.onResize?.(sz);
+                    app.graph.setDirtyCanvas(true, false);
+                });
+            }
+
+            const onExecuted = nodeType.prototype.onExecuted;
+            // When the node is executed we will be sent the saved text, display this in the widget
+            nodeType.prototype.onExecuted = function (message) {
+                onExecuted?.apply(this, arguments);
+                if (message.text) {
+                    populate.call(this, message.text, 'saved_text');
+                }
+            };
+
+            const onConfigure = nodeType.prototype.onConfigure;
+            nodeType.prototype.onConfigure = function () {
+                onConfigure?.apply(this, arguments);
+                if (this.widgets_values?.length) {
+                    populate.call(this, this.widgets_values, 'saved_text');
+                }
+            };
+        }
+
         // Handle anythingInversedSwitch_ViewComfy node - dynamic outputs
         if (node_name === 'anythingInversedSwitch_ViewComfy') {
             const onNodeCreated = nodeType.prototype.onNodeCreated;
