@@ -11,6 +11,7 @@ import numpy as np
 import torch
 from nodes import LoadImage
 from PIL import Image, ImageOps, ImageSequence
+import folder_paths
 
 from .utils import COMPARE_FUNCTIONS, AlwaysEqualProxy, ByPassTypeTuple
 
@@ -327,6 +328,44 @@ class ShowErrorMessage:
         return "show_error is False"
 
 
+class SaveText:
+
+    def __init__(self):
+        self.output_dir = folder_paths.output_directory
+        self.type = "output"
+
+    @classmethod
+    def INPUT_TYPES(s):
+        input_types = {}
+        input_types['required'] = {
+            "text": ("STRING", {"default": "", "forceInput": True}),
+            "file_name": ("STRING", {"multiline": False, "default": "text_file"}),
+            "overwrite": ("BOOLEAN", {"default": True}),
+        }
+        return input_types
+
+    RETURN_TYPES = ()
+    FUNCTION = "save_text"
+    OUTPUT_NODE = True
+    CATEGORY = "utils"
+
+
+    def save_text(self, text, file_name, overwrite):
+        if isinstance(file_name, list):
+            file_name = file_name[0]
+        filepath = str(os.path.join(self.output_dir, file_name)) + ".txt"
+
+        if overwrite:
+            file_mode = "w"
+        else:
+            file_mode = "a"
+
+        with open(filepath, file_mode, newline="", encoding='utf-8') as text_file:
+            for line in text:
+                text_file.write(line)
+
+        return {"result": (text,)}
+
 # Node class mappings
 NODE_CLASS_MAPPINGS = {
     "conditionalSelect_ViewComfy": ConditionalSelect,
@@ -335,6 +374,7 @@ NODE_CLASS_MAPPINGS = {
     "loadImage_ViewComfy": LoadImageVC,
     "anythingInversedSwitch_ViewComfy": AnythingInversedSwitch,
     "showErrorMessage_ViewComfy": ShowErrorMessage,
+    "saveText_ViewComfy": SaveText,
 }
 
 # Node display name mappings
@@ -345,4 +385,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "loadImage_ViewComfy": "ViewComfy - Load Image",
     "anythingInversedSwitch_ViewComfy": "ViewComfy - Anything Inversed Switch",
     "showErrorMessage_ViewComfy": "ViewComfy - Show Error Message",
+    "saveText_ViewComfy": "ViewComfy - Save Text",
 }
