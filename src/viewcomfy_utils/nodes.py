@@ -9,9 +9,7 @@ import folder_paths
 import node_helpers
 import numpy as np
 import torch
-from nodes import LoadImage
 from PIL import Image, ImageOps, ImageSequence
-import folder_paths
 
 from .utils import COMPARE_FUNCTIONS, AlwaysEqualProxy, ByPassTypeTuple
 
