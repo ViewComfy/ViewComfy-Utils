@@ -1,9 +1,19 @@
 name: 📦 Publish to Comfy registry
 on:
-  workflow_dispatch:
   push:
     tags:
       - '*'
+  workflow_dispatch:
+      inputs:
+          logLevel:
+              description: "Log level"
+              required: true
+              default: "warning"
+              type: choice
+              options:
+                  - info
+                  - warning
+                  - debug
 
 permissions:
   issues: write
