@@ -60,7 +60,26 @@ app.registerExtension({
 
         // Handle saveText_ViewComfy node
         if (node_name === 'saveText_ViewComfy') {
-            function populate(text, name = 'saved_text') {
+            // Helper function to fetch file content if textItem is a file reference
+            async function fetchFileContent(textItem) {
+                if (typeof textItem !== 'string') return textItem;
+                
+                try {
+                    const parsed = JSON.parse(textItem);
+                    if (parsed.type === 'output' && parsed.filename) {
+                        const response = await fetch(`/view?filename=${encodeURIComponent(parsed.filename)}&type=output`);
+                        console.log('response:', response);
+                        if (response.ok) {
+                            return await response.text();
+                        }
+                    }
+                } catch (e) {
+                    console.log('error:', e);
+                }
+                return textItem;
+            }
+
+            async function populate(text, name = 'saved_text') {
                 if (this.widgets) {
                     const pos = this.widgets.findIndex((w) => w.name === name);
                     if (pos !== -1) {
@@ -73,8 +92,11 @@ app.registerExtension({
                 
                 // Handle both string and array of strings
                 const textArray = Array.isArray(text) ? text : [text];
+
+                // Fetch file contents for any file references
+                const resolvedTexts = await Promise.all(textArray.map(fetchFileContent));
                 
-                for (const textItem of textArray) {
+                for (const textItem of resolvedTexts) {
                     const w = ComfyWidgets["STRING"](this, name, ["STRING", {multiline: true}], app).widget;
                     w.inputEl.readOnly = true;
                     w.inputEl.style.opacity = 0.6;

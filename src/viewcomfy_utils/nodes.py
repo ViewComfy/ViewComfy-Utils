@@ -362,7 +362,9 @@ class SaveText:
             for line in text:
                 text_file.write(line)
 
-        return {"ui": {"text": [text]}, "result": ([text],)}
+        result = [f'{{"type": "output", "filename": "{file_name}.txt"}}']
+
+        return {'ui': {'text': result}, 'result': (result,)}
 
 # Node class mappings
 NODE_CLASS_MAPPINGS = {
