@@ -18,6 +18,8 @@ This node pack has no extra dependencies beyond the standard ComfyUI ones. It ca
 
 6. [Show Error Message](#show-error-message)
 
+7. [Save Text](#save-text)
+
 ## Demo
 
 [![Demo Video](https://github.com/user-attachments/assets/ac06c9e3-c2f0-4941-97f5-8f91ea6c781d)](https://youtu.be/kMSHMvVe-W8)
@@ -229,4 +231,20 @@ Conditionally displays an error message and halts workflow execution.
 - Creating conditional error messages based on workflow state
 
 - Implementing user-friendly error handling in complex workflows
+
+
+
+---
+
+## Save text
+
+Save a string in the output folder as a text file. 
+
+### Inputs
+
+- Any string
+
+### Example Use Cases
+
+- Display text in a viewcomfy app
 
