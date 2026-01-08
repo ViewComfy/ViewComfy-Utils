@@ -468,4 +468,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "anythingInversedSwitch_ViewComfy": "ViewComfy - Anything Inversed Switch",
     "showErrorMessage_ViewComfy": "ViewComfy - Show Error Message",
     "saveText_ViewComfy": "ViewComfy - Save Text",
+    "downloadAndSaveVideo_ViewComfy": "ViewComfy - Download and Save Video",
 }
