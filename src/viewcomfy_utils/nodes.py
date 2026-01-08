@@ -1,9 +1,14 @@
 import hashlib
 import json
 import os
+import re
+import urllib.request
 from pathlib import Path
 from types import NoneType
 from typing import Any
+from urllib.parse import urlparse
+import mimetypes
+import shutil
 
 import folder_paths
 import node_helpers
@@ -325,7 +330,6 @@ class ShowErrorMessage:
             raise Exception(error_message)  # noqa: TRY002
         return "show_error is False"
 
-
 class SaveText:
 
     def __init__(self):
@@ -366,6 +370,83 @@ class SaveText:
 
         return {'ui': {'text': result}, 'result': (result,)}
 
+
+class DownloadAndSaveVideo:
+    def __init__(self):
+        self.output_dir = folder_paths.get_output_directory()
+        self.type = "output"
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "url": ("STRING", {"default": "", "multiline": False}),
+                "filename_prefix": ("STRING", {"default": "DownloadedVideo"}),
+            },
+        }
+
+    RETURN_TYPES = ()
+    FUNCTION = "download_and_save"
+    OUTPUT_NODE = True
+    CATEGORY = "utils"
+
+    def download_and_save(self, url, filename_prefix):
+        if not url:
+            raise ValueError("URL cannot be empty when downloading and saving video")
+
+        try:
+            with urllib.request.urlopen(url, timeout=30) as response:
+                content_type = response.headers.get('Content-Type', '')
+                file_ext = None
+
+                parsed_url = urlparse(url)
+                path = parsed_url.path
+                if path:
+                    file_ext = os.path.splitext(path)[1].lstrip('.').lower()
+
+                if not file_ext:
+                    if 'video/' in content_type:
+                        file_ext = content_type.split('/')[-1].split(';')[0].strip()
+                        mime_to_ext = {
+                            'mp4': 'mp4',
+                            'webm': 'webm',
+                            'quicktime': 'mov',
+                            'x-msvideo': 'avi',
+                            'x-matroska': 'mkv',
+                        }
+                        file_ext = mime_to_ext.get(file_ext, file_ext)
+                    elif content_type and content_type != 'application/octet-stream':
+                        guessed = mimetypes.guess_extension(content_type)
+                        if guessed:
+                            file_ext = guessed.lstrip('.')
+
+                if not file_ext:
+                    print("No file extension found, using default extension: mp4")
+                    file_ext = 'mp4'
+
+                output_filename = f"{filename_prefix}_00000.{file_ext}"
+                file_path = str(os.path.join(self.output_dir, output_filename))
+                while os.path.exists(file_path):
+                    counter = output_filename.split('_')[-1].split('.')[0]
+                    counter = int(counter) + 1
+                    output_filename = f"{filename_prefix}_{counter:05}.{file_ext}"
+                    file_path = str(os.path.join(self.output_dir, output_filename))
+
+                with open(file_path, 'wb') as f:
+                    shutil.copyfileobj(response, f)
+
+            results =[{
+                "filename": output_filename,
+                "subfolder": "",
+                "type": self.type
+            }]
+            return { "ui": { "images": results, "animated": (True,) } }
+        except urllib.error.URLError as e:
+            raise Exception(f"Failed to download video from URL: {e}")
+        except Exception as e:
+            raise Exception(f"Error downloading and saving video: {e}")
+
+
 # Node class mappings
 NODE_CLASS_MAPPINGS = {
     "conditionalSelect_ViewComfy": ConditionalSelect,
@@ -375,6 +456,7 @@ NODE_CLASS_MAPPINGS = {
     "anythingInversedSwitch_ViewComfy": AnythingInversedSwitch,
     "showErrorMessage_ViewComfy": ShowErrorMessage,
     "saveText_ViewComfy": SaveText,
+    "downloadAndSaveVideo_ViewComfy": DownloadAndSaveVideo,
 }
 
 # Node display name mappings
