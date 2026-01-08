@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ViewComfy-Utils"
-version = "1.1.2"
+version = "1.2.2"
 description = "Custom nodes to enable ViewComfy app functionalities"
 authors = [
   {name = "ViewComfy", email = "guillaume@viewcomfy.com"}

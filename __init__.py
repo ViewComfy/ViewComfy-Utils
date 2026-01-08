@@ -8,7 +8,7 @@ __all__ = [
 
 __author__ = """ViewComfy"""
 __email__ = "guillaume@viewcomfy.com"
-__version__ = "1.1.2"
+__version__ = "1.2.2"
 
 from .src.viewcomfy_utils.nodes import NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS
 
