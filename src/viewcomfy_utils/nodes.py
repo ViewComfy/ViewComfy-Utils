@@ -288,7 +288,6 @@ class AnythingInversedSwitch:
     CATEGORY = "utils"
 
     def switch(self, index: int, unique_id: Any, **kwargs: dict):
-        print("starting anythingInversedSwitch")
         from comfy_execution.graph import ExecutionBlocker
 
         res = []

@@ -20,6 +20,8 @@ This node pack has no extra dependencies beyond the standard ComfyUI ones. It ca
 
 7. [Save Text](#save-text)
 
+8. [Download and Save Video](#download-and-save-video)
+
 ## Demo
 
 [![Demo Video](https://github.com/user-attachments/assets/ac06c9e3-c2f0-4941-97f5-8f91ea6c781d)](https://youtu.be/kMSHMvVe-W8)
@@ -248,3 +250,25 @@ Save a string in the output folder as a text file.
 
 - Display text in a viewcomfy app
 
+---
+
+## Download and Save Video
+
+Downloads a video from a URL and saves it to the output directory. Designed to be fast and reliable when called via API, skipping the usual tensor conversion processes.
+
+### Inputs
+
+- A URL pointing to the video file
+- A filename prefix for the downloaded video
+
+### Outputs
+
+- Saves the video file to the output directory
+
+### Special Behavior
+
+- Defaults to `.mp4` if no extension can be determined from the URL or the MIME type
+
+### Example Use Cases
+
+- Fast video downloads with no extra processes
