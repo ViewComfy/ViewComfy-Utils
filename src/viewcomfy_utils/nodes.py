@@ -439,7 +439,7 @@ class DownloadAndSaveVideo:
                 "subfolder": "",
                 "type": self.type
             }]
-            return { "ui": { "images": results, "animated": (True,) } }
+            return { "ui": { "images": results}}
         except urllib.error.URLError as e:
             raise Exception(f"Failed to download video from URL: {e}")
         except Exception as e:

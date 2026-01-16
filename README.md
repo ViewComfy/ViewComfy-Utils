@@ -267,6 +267,7 @@ Downloads a video from a URL and saves it to the output directory. Designed to b
 
 ### Special Behavior
 
+- The node does not display a video preview in the ComfyUI interface after downloading. The video will still appear in the ComfyUI history tab (left sidebar). This limitation only affects the ComfyUI interface and has no impact when using the node via API or in a ViewComfy app.
 - Defaults to `.mp4` if no extension can be determined from the URL or the MIME type
 
 ### Example Use Cases
